@@ -45,7 +45,7 @@ def ganarate():
         img.save(filepath)
 
         run_projection(
-        network_pkl = './dnnlib/network-snapshot-000800.pkl',
+        network_pkl = './dnnlib/cel/network-snapshot-000800.pkl',
         target_fname = filepath,
         outdir = './save/out',
         save_video = False,
