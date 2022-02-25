@@ -3,6 +3,8 @@ from flask import Flask, request, send_file
 from werkzeug.utils import secure_filename
 
 from stylegan2_ada_pytorch.projector import run_projection
+import face_recognition
+
 
 app = Flask(__name__)
 # CORS(app)
@@ -38,14 +40,20 @@ def ganarate():
         print(request.files)
         # print(request.form.to_dict())
         img = request.files['img']
+        # print(img)
         print('=====================')
-        # print(img.filename)
         filepath = './save/'+secure_filename(img.filename)
 
         img.save(filepath)
+        image = face_recognition.load_image_file(filepath)
+        face_locations = face_recognition.face_locations(image)
+        print(face_locations)
+        print(face_locations[0])
+        print(face_locations[0][1])
+
 
         run_projection(
-        network_pkl = './dnnlib/cel/network-snapshot-000800.pkl',
+        network_pkl = './dnnlib/cel2/network-snapshot-000600.pkl',
         target_fname = filepath,
         outdir = './save/out',
         save_video = False,
