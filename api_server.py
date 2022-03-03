@@ -7,9 +7,25 @@ import face_recognition
 import cv2
 import numpy as np
 
+from PIL import Image
+import io
+from base64 import encodebytes
+# import base64
+from flask import jsonify
+
 
 app = Flask(__name__)
 # CORS(app)
+
+
+def get_response_image(image_path):
+    pil_img = Image.open(image_path, mode='r')
+    print('pil_img:', type(pil_img))
+    byte_arr = io.BytesIO()
+    pil_img.save(byte_arr, format='PNG')
+    encoded_img = encodebytes(byte_arr.getvalue()).decode('ascii')
+    print('encoded_img:', type(encoded_img))
+    return encoded_img
 
 
 @app.route('/test/<name>')
@@ -94,7 +110,22 @@ def ganarate():
         num_steps = 100
         )
 
-        return send_file('./save/out/proj.png')
+
+        encoded_imges = []
+        # with open(cropped_filepath, 'rb') as img:
+        #     img_str1 = base64.b64encode(img.read())
+        #     encoded_imges.append(img_str1)
+        
+        # with open('./save/out/proj.png', 'rb') as img:
+        #     img_str2 = base64.b64encode(img.read())
+        #     encoded_imges.append(img_str2)
+
+        encoded_imges.append(get_response_image(cropped_filepath))
+        encoded_imges.append(get_response_image('./save/out/proj.png'))
+        # print(encoded_imges)
+
+        return jsonify({'result': encoded_imges})
+        # return encoded_imges
 
 if __name__ == '__main__':
     app.run(debug=True, host='127.0.0.2', port='7000')
