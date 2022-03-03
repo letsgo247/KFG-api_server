@@ -24,6 +24,20 @@ import torch.nn.functional as F
 import dnnlib
 import legacy
 
+# import cv2
+
+def save_img(G, img_w, step):
+    import matplotlib.pyplot as plt
+    
+    img_w = img_w.repeat([G.mapping.num_ws, 1])
+
+    synth_image = G.synthesis(img_w.unsqueeze(0), noise_mode='const')
+    synth_image = (synth_image + 1) * (255/2)
+    synth_image = synth_image.permute(0, 2, 3, 1).clamp(0, 255).to(torch.uint8)[0].cpu().numpy()
+    
+    plt.imsave(f'save/out/{step}.png', synth_image)
+
+
 def project(
     G,
     target: torch.Tensor, # [C,H,W] and dynamic range [0,255], W & H must match G output resolution
@@ -99,6 +113,26 @@ def project(
         if synth_images.shape[2] > 256:
             synth_images = F.interpolate(synth_images, size=(256, 256), mode='area')
 
+
+        # '''
+        # 추가한 부분
+        # 이었으나 일단 버리고
+        # 태훈샘 코드 사용
+        # '''
+        # if step % 10 == 0:
+        #     print(step)
+        #     # print(type(synth_images))
+        #     # print(synth_images.size())
+        #     img = synth_images.permute(0, 2, 3, 1).clamp(0, 255).to(torch.uint8)[0].cpu().numpy()
+        #     PIL.Image.fromarray(img, 'RGB').save(f'save/out/{step}.png')
+        #     print(img)
+        #     # print(type(img))
+        #     # print(img.shape)
+        # '''
+        # 추가한 부분
+        # '''
+
+
         # Features for synth images.
         synth_features = vgg16(synth_images, resize_images=False, return_lpips=True)
         dist = (target_features - synth_features).square().sum()
@@ -123,6 +157,9 @@ def project(
 
         # Save projected W for each optimization step.
         w_out[step] = w_opt.detach()[0]
+
+        if not step % 10:
+            save_img(G, w_out[step], step)
 
         # Normalize noise.
         with torch.no_grad():
